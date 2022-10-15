@@ -1,5 +1,4 @@
 import logging
-
 def set_logger(log_path):
     """Set the logger to log info in terminal and file `log_path`.
     In general, it is useful to have a logger so that every output to the terminal is saved
