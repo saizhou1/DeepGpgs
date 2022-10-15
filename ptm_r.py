@@ -1,15 +1,3 @@
-
-# Done!
-# Accuracy of the network on the test images:96.9921875
-# 特异性:  0.9921875
-# 精度:  0.969921875  。
-# 查准率P:  0.9747048903878583
-# 召回率SN:  0.903125
-# F1 Score:  0.9588705337795981
-# mcc 0.9189369670160951
-# save .npy done
-# rocauc 0.9825638834635416
-# prauc 0.9825638834635416
 import logging
 import os
 import transformers
