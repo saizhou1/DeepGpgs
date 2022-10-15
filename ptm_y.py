@@ -1,16 +1,4 @@
 
-
-# Done!
-# Accuracy of the network on the  test images: 90.476190 %
-# 特异性:  0.8571428571428571
-# 精度:  0.9047619047619048
-# 查准率P:  0.8695652173913043
-# 召回率SN:  0.9523809523809523
-# F1 Score:  0.9045454545454545
-# mcc 0.8132202844993978
-# auc 0.9274376417233561
-#微调
-
 import torch
 # import transformers
 import torch.nn as nn
