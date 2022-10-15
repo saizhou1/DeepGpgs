@@ -4,7 +4,6 @@ Protein arginine methylation is an important post-translational modification, wh
 In this paper, we design a deep learning model DeepGpgs incorporating Gaussian prior and gated attention mechanism. First, we introduce a residual network channel to obtain the evolutionary information of proteins. The other channel consists of adaptive embedding and bidirectional long short-term memory network to form a context-shared coding layer. After that, the global information of the sequence is acquired through the multi-head attention mechanism based on gating, and Gaussian prior is injected into the sequence to assist the prediction of loci. Finally, we propose a weighted joint loss function to alleviate the false negative problem of modified sites.
 
 
-
 ## requirement
 hiddenlayer == 0.3  
 pandas == 1.2.4  
@@ -15,7 +14,6 @@ torch == 1.4.0
 tqdm == 4.55.1  
 matplotlib == 3.4.2  
 numpy == 1.19.5  
-
 
 ## Run DeepGpgs for prediction
 Prediction based on arginine methylation dataset:
