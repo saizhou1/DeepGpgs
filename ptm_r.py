@@ -413,7 +413,7 @@ def main(args):
 #          transforms.Normalize([0.5], [0.5])])
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     valid_dataloader  = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-    # 定义训练函数，需要
+    # 定义训练函数，需要。
     from sklearn.metrics import accuracy_score,confusion_matrix,classification_report
 
     epoch_list=[]
