@@ -441,7 +441,7 @@ def main(args):
     # print("Done!")
     logger.info("Done!")
     
-    model.load_state_dict(torch.load("./data/output/DeepGpgs_r.pth"))
+    model.load_state_dict(torch.load("./Dataset/output/DeepGpgs_r.pth"))
     # model.load_state_dict(torch.load("/home1/saizh/sai/PTM/data/output/model.pth"),strict=False)
     model.eval()
     correct = 0
