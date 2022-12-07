@@ -377,7 +377,7 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=5, eta_m
 
 
 
-model.load_state_dict(torch.load("./Y_model/model.pth"),strict=False)
+model.load_state_dict(torch.load("./Y_model/model_Y.pth"),strict=False)
 model.eval()
 correct = 0
 total = 0
