@@ -28,7 +28,7 @@ from sklearn.metrics import *
 import matplotlib.pyplot as plt
 from sklearn.metrics import matthews_corrcoef
 import config
-# 如果显卡可用，则用显卡进行训练
+# If the graphics card is available, train with the graphics card
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print("Using {} device".format(device))
 
@@ -36,7 +36,7 @@ import xlrd
 print(os.getcwd())
 blosum_mat=pd.read_csv("./blosum.csv",header=0,index_col=0)
 
-#转化成二维形式，这个形式可以作为卷积神经网络的输入
+#converted into a two-dimensional form, this form can be used as input to the convolutional neural network
 
 def onehot(s):
     alphabet = 'ARNDCQEGHILKMFPSTWYVO'
@@ -56,23 +56,23 @@ def onehot(s):
     All_id = np.array(All_id)
     return All_id
 
-def embedding(s):#s表示文件名称，path代表路径
+def embedding(s):# s is the name of the file, path is the path
     # os.chdir(path)
     f1 = open(s,'r')
     All = f1.read().splitlines()
     All[0]
-    h = len(All)#行数，样本数
-    l = len(All[0])#列数，氨基酸序列长度
+    h = len(All)# Number of rows, number of samples
+    l = len(All[0])# Number of columns, amino acid sequence length
     B = 'ACDEFGHIKLMNPQRSTVWYO'
     B = list(B)
     All_id=[]
     
-    for i in range(h):#遍历每个样本
+    for i in range(h):# Iterate through each sample
     
         matrix_code1=[]
-        for j in range(l):#遍历每个序列
+        for j in range(l):# Iterate through each sequence
             try:
-                matrix_code1.append(B.index(All[i][j]))#找到i个样本，第j个序列的编码,把序列转化为数字
+                matrix_code1.append(B.index(All[i][j]))# Find the code of the jth sequence of i samples, and convert the sequence into numbers
             except:
                 matrix_code1.append(B.index("O"))
         All_id.append(matrix_code1)
@@ -90,7 +90,7 @@ def cpu_mid_loss(y_pred,y_true,mid=0,pi=0.1,**kwargs):
     y_pred = y_pred[:,-1]#gather(1,y_true.view(-1,1))
     y_true=y_true.to(torch.float32)
     pos = y_true * y_pred / torch.max(eps,y_true)
-    #maximum两个 tensor 进行逐元素比较，返回每个较大的元素组成一个新的 tensor。
+    # The maximum two tensors are compared element by element and each larger element is returned to form a new tensor.
     pos = - torch.log(pos + eps)
     neg = (1-y_true) * y_pred/ torch.max(eps, 1-y_true)
     neg = torch.abs(neg- 1e-2) 
@@ -126,7 +126,7 @@ class GELU(nn.Module):
     def forward(self, x):
         return 0.5*x*(1+torch.tanh(np.sqrt(2/np.pi)*(x+0.044715*torch.pow(x,3))))
 
-class Attention_1(nn.Module):#多头自注意力机制
+class Attention_1(nn.Module):# Multi-headed Self-Attention Mechanism
     def __init__(self, hidden_size=256,num_attention_heads=8):
         super(Attention_1, self).__init__()
         
@@ -143,9 +143,9 @@ class Attention_1(nn.Module):#多头自注意力机制
         self.value = nn.Linear(hidden_size, self.hidden_size,bias=False).to(device)
         self.gate = nn.Linear(hidden_size, self.hidden_size).to(device)
         
-    def transpose_for_scores(self, x):#将向量分成二个头
-        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)#[:-1]左闭右开不包括-1
-        x = x.view(*new_x_shape)# * 星号的作用大概是去掉 tuple 属性吧(自动解包)
+    def transpose_for_scores(self, x):# Divide the vector into two heads
+        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)#[:-1]Left closed and right open not included-1
+        x = x.view(*new_x_shape)# * The purpose of the asterisk is probably to remove the tuple attribute (automatic unpacking)
         return x.permute(0, 2, 1, 3)
 
         
@@ -177,7 +177,7 @@ class Attention_1(nn.Module):#多头自注意力机制
         attn_scores = F.softmax(attention_scores  , dim=-1)  # 
         
 
-        # 对于全零向量，-1e32的结果为 1/len, -inf为nan, 额外补0
+        # For an all-zero vector, -1e32 results in 1/len, -inf is nan, and the extra complement is 0
 #         masked_attn_scores = attn_scores.masked_fill((1 - batch_masks).bool(), 0.0)
 
         # sum weighted sources
@@ -206,8 +206,8 @@ def main(args):
     word2vec_path = "./blosum.csv"
     # logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
     #                     datefmt='%m/%d/%Y %H:%M:%S',
-    #                     level=logging.INFO)#设置日志级别
-    # logger.addHandler(logging.FileHandler(os.path.join("/home1/saizh/sai/PTM", "trial.log"), 'w'))#将日志写入文件,
+    #                     level=logging.INFO)# Set the log level
+    # logger.addHandler(logging.FileHandler(os.path.join("/home1/saizh/sai/PTM", "trial.log"), 'w'))# Write the log to a file
 
     import torch.utils.data as data_utils
     xtrain=onehot(args.train_file)#'../input/onetrain'../input/fast-s/fastSulf.txt
@@ -220,10 +220,10 @@ def main(args):
     xvalid=xvalid[0:640+1920]
     yvalid=np.array([1 for i in range(640)] + [0 for i in range(1920)])#1920
 
-    xtrain = xtrain.reshape([-1,1,41])#转成cnn输入格式,(52559, 41*21)
+    xtrain = xtrain.reshape([-1,1,41])# Convert to cnn input format, (52559, 41*21)
     xtrain = xtrain.astype(int)
     print(xtrain.shape)
-    xvalid= xvalid.reshape([-1,1,41])#转成cnn输入格式,(52559, 41*21)
+    xvalid= xvalid.reshape([-1,1,41])# Convert to cnn input format, (52559, 41*21)
     xvalid = xvalid.astype(int)
     print(xvalid.shape)
 
@@ -231,14 +231,14 @@ def main(args):
     test_dataset = data_utils.TensorDataset(torch.Tensor(xvalid),torch.Tensor(yvalid).long())
     PI_RC = np.sum(ytrain)/np.prod(ytrain.shape)#
     FN_RATIO = 0.05
-    # 定义损失函数，计算相差多少
-    # 调用刚定义的模型，将模型转到GPU（如果可用）
+    #  Define the loss function and calculate how much the difference is
+    #  Call the model just defined and transfer the model to the GPU (if available)
         
     import scipy
     sigma = 2.5
     mu = 0.0
 
-    norm_0=scipy.stats.norm(mu,sigma).cdf(1)-scipy.stats.norm(mu,sigma).cdf(0)#实现正态分布累计密度函数，窗口长度为1
+    norm_0=scipy.stats.norm(mu,sigma).cdf(1)-scipy.stats.norm(mu,sigma).cdf(0)# Implementing a normally distributed cumulative density function with a window length of 1
     norm_1=scipy.stats.norm(mu,sigma).cdf(2)-scipy.stats.norm(mu,sigma).cdf(1)
     norm_2=scipy.stats.norm(mu,sigma).cdf(3)-scipy.stats.norm(mu,sigma).cdf(2)
     norm_3=scipy.stats.norm(mu,sigma).cdf(4)-scipy.stats.norm(mu,sigma).cdf(3)
@@ -250,8 +250,8 @@ def main(args):
     ann1_index = (max_seq_length-1)//2
 
     P_array[ann1_index-1] = norm_1
-    P_array[ann1_index] = norm_0  #@的位置
-    P_array[ann1_index+1] = norm_1 #chemical/gene的位置 
+    P_array[ann1_index] = norm_0  # Location of @
+    P_array[ann1_index+1] = norm_1 # Location of chemical/gene 
     if ann1_index+2 < max_seq_length:
         P_array[ann1_index+2] = norm_1
     if ann1_index+3 < max_seq_length:
@@ -288,7 +288,7 @@ def main(args):
     class MyNet(nn.Module):
         def __init__(self):
             super().__init__()
-            #与guass概率作用后用的激活函数
+            # The activation function used after the action with guass probability
             self.activation_final = nn.Tanh()#nn.Tanh()
             self.gelu = GELU()
 
@@ -305,8 +305,8 @@ def main(args):
 
 
 
-            vgg16_bn_=models.vgg16_bn(pretrained=True)#支持我们在自定义架构使用卷积层的部分7-13层
-            resnet18_=models.resnet18(pretrained=True)#使用残差块部分，深度不足可以增加特征图数目，一般取整个残差块layer3
+            vgg16_bn_=models.vgg16_bn(pretrained=True)# Support our use of convolutional layers in custom architectures for some of the layers 7-13
+            resnet18_=models.resnet18(pretrained=True)# Use the residual block part, the depth is not enough to increase the number of feature map, generally take the whole residual block layer3
             
             self.conv1=nn.Sequential(nn.Conv2d(1,64,kernel_size=3,stride=1,padding=1)
                                     ,nn.BatchNorm2d(64,1e-5)
@@ -316,9 +316,9 @@ def main(args):
             resnet18_.layer3[0].relu=nn.PReLU()
             resnet18_.layer3[1].relu=nn.PReLU()
             
-            self.block2 = vgg16_bn_.features[7:14]#14*14.2个卷积和2个BN层，最后一个最大池化，输入64通道，输出128个通道
-            self.block3 = resnet18_.layer3#7*7,残差网络中说明不要带偏置，看看这个resnet18网络结构是什么
-            self.avgpool = resnet18_.avgpool#将所有特征图尺寸转为1*1
+            self.block2 = vgg16_bn_.features[7:14]# 14*14.2 convolution and 2 BN layers, last max pooling, 64 channels input, 128 channels output
+            self.block3 = resnet18_.layer3# 7*7,It is stated in the residual network not to bring bias, see what this resnet18 network structure is
+            self.avgpool = resnet18_.avgpool# Convert all feature map dimensions to 1*1
             self.cnn = nn.Sequential(
                 self.block2,
                 self.block3,
@@ -327,7 +327,7 @@ def main(args):
             for param in self.cnn.parameters():
                 param.requires_grad = True
 
-            self.bilstm1 = torch.nn.LSTM(100, 128, 1, bidirectional=True,batch_first=True)#输入维度，隐藏层维度，层数
+            self.bilstm1 = torch.nn.LSTM(100, 128, 1, bidirectional=True,batch_first=True)# Input dimension, hidden layer dimension, number of layers
 
             self.attention_net=Attention_1
             # self.layer_norm = torch.nn.LayerNorm(128).to(device)
@@ -395,10 +395,11 @@ def main(args):
             return hidden
     model = MyNet().to(device)
     print(model)
-    mid_loss = partial(cpu_mid_loss,mid = PI_RC,pi=0.1)#(1+FN_RATIO)，固定后面两个参数
-    loss_fn =cpu_mid_loss##cpu_mid_loss##nn.CrossEntropyLoss()#交叉熵损失函数focal_loss()#alpha=[0.55,0.45],
+    mid_loss = partial(cpu_mid_loss,mid = PI_RC,pi=0.1)#(1+FN_RATIO)，Fix the last two parameters
+    loss_fn =cpu_mid_loss##cpu_mid_loss##nn.CrossEntropyLoss()
+    # Cross-entropy loss functionfocal_loss()#alpha=[0.55,0.45],
 
-    # 定义优化器，用来训练时候优化模型参数
+    # Define optimizers to optimize model parameters during training
 
     optimizer = torch.optim.Adam(model.parameters(),lr=config.lr)
     # CNN:3e-4:,2e-3:,2e-5:
@@ -413,7 +414,7 @@ def main(args):
 #          transforms.Normalize([0.5], [0.5])])
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     valid_dataloader  = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-    # 定义训练函数，需要。
+    # Define the training function that is needed.
     from sklearn.metrics import accuracy_score,confusion_matrix,classification_report
 
     epoch_list=[]
@@ -431,8 +432,8 @@ def main(args):
     # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=5, eta_min=2e-06) 
 
-    #>0.1f表示右对齐，占0个位置,小数为1的浮点数
-    # 一共训练10次
+    # >0.1f means right-aligned, takes up 0 positions, decimal 1 floating point number
+    # A total of 10 training sessions
     epochs = config.epoch_num
 
     best_test_f1=0
@@ -469,7 +470,7 @@ def main(args):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
     #         print(predicted)
-    # print('Accuracy of the network on the test images: %f %%' % ( 100 *correct / total))#%%表示字符%
+    # print('Accuracy of the network on the test images: %f %%' % ( 100 *correct / total))#%%Indicates characters%
     logger.info("Accuracy of the network on the test images:{}".format(100 *correct / total))
 
 
@@ -482,20 +483,20 @@ def main(args):
     sp = tn/(tn+fp)
     sn = tp/(tp+fn)
     mcc= (tp*tn-fp*fn)/(((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn))**0.5)
-    print("特异性: ",sp)
+    print("sp: ",sp)
 
-    # 精度，准确率， 预测正确的占所有样本种的比例
+    # Precision, accuracy, percentage of correct predictions for all sample species
 
     accuracy = accuracy_score(yvalid, preds_list)
-    print("精度: ",accuracy)
+    print("acc: ",accuracy)
 
-    # # 精准率P（准确率），precision(查准率)=TP/(TP+FP)
+    # # Precision P (accuracy rate), precision (check accuracy rate) = TP/(TP+FP)
     precision = precision_score(yvalid, preds_list) # 'micro', 'macro', 'weighted'
-    print("查准率P: ",precision)
+    print("precision: ",precision)
 
-    # # 查全率R（召回率），原本为对的，预测正确的比例；recall(查全率)=TP/(TP+FN)
+    # # Check all rate R (recall rate), originally right, the proportion of correct predictions; recall (check all rate) = TP/(TP + FN)
     recall = recall_score(yvalid, preds_list) # 'micro', 'macro', 'weighted'
-    print("召回率SN: ",recall)
+    print("SN: ",recall)
 
     # F1-Score
     f1 = f1_score(yvalid, preds_list, average='macro')     # 'micro', 'macro', 'weighted'

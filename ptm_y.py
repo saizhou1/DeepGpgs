@@ -32,7 +32,7 @@ def cpu_mid_loss(y_pred,y_true,mid=0,pi=0.1,**kwargs):
     y_pred = y_pred[:,-1]#gather(1,y_true.view(-1,1))
     y_true=y_true.to(torch.float32)
     pos = y_true * y_pred / torch.max(eps,y_true)
-    #maximum两个 tensor 进行逐元素比较，返回每个较大的元素组成一个新的 tensor。
+    # The maximum two tensors are compared element by element and each larger element is returned to form a new tensor.
     pos = - torch.log(pos + eps)
     neg = (1-y_true) * y_pred/ torch.max(eps, 1-y_true)
     neg = torch.abs(neg- 1e-2) 
@@ -40,8 +40,8 @@ def cpu_mid_loss(y_pred,y_true,mid=0,pi=0.1,**kwargs):
     return torch.mean(0.5*pos + 0.5*neg)#Returns the mean value of all elements in the input tensor.
 
 
-mid_loss = partial(cpu_mid_loss,mid = 0,pi=0.1)#(1+FN_RATIO)，固定后面两个参数
-# 如果显卡可用，则用显卡进行训练
+mid_loss = partial(cpu_mid_loss,mid = 0,pi=0.1)#(1+FN_RATIO)，Fix the last two parameters
+# If the graphics card is available, train with the graphics card
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print("Using {} device".format(device))
 
@@ -51,30 +51,30 @@ print(os.getcwd())
 blosum_mat=pd.read_csv("./blosum.csv",header=0,index_col=0)
 # pam_mat = pd.read_excel("/home1/saizh/sai/PTM/PAM_250.xlsx",header=0,index_col=0,engine='openpyxl')
 
-def embedding(s):#s表示文件名称，path代表路径
+def embedding(s):# s is the name of the file, path is the path
     # os.chdir(path)
     
     
     f1 = open(s,'r')
     All = f1.read().splitlines()
     All[0]
-    h = len(All)#行数，样本数
-    l = len(All[0])#列数，氨基酸序列长度
+    h = len(All)# Number of rows, number of samples
+    l = len(All[0])# Number of columns, amino acid sequence length
     B = 'ACDEFGHIKLMNPQRSTVWYX'
     B = list(B)
     All_id=[]
 
-    for i in range(h):#遍历每个样本
+    for i in range(h):# Iterate through each sample
         matrix_code1=[]
-        for j in range(l):#遍历每个序列
-            matrix_code1.append(B.index(All[i][j]))#找到i个样本，第j个序列的编码,把序列转化为字母
+        for j in range(l):# Iterate through each sequence
+            matrix_code1.append(B.index(All[i][j]))# Find the code of the jth sequence of i samples, and convert the sequence into letters
         All_id.append(matrix_code1)
     one_code = np.array(All_id,dtype=object)
     return one_code
 
-#转化成二维形式，这个形式可以作为卷积神经网络的输入
+# converted into a two-dimensional form, this form can be used as input to the convolutional neural network
 import torch.utils.data as data_utils
-xtrain=embedding("./data/Y_train.fasta")#'../input/onetrain'../input/fast-s/fastSulf.txt
+xtrain=embedding("./data/Y_train.fasta")# '../input/onetrain'../input/fast-s/fastSulf.txt
 
 ytrain=np.array([1 for i in range(len(xtrain)//2)] + [0 for i in range(len(xtrain)//2)])
 
@@ -82,10 +82,10 @@ xvalid = embedding("./data/Y_test.fasta")
 yvalid=np.array([1 for i in range(len(xvalid)//2)] + [0 for i in range(len(xvalid)//2)])
 
 
-xtrain = xtrain.reshape([-1,1,33])#转成cnn输入格式,(52559, 41*21)
+xtrain = xtrain.reshape([-1,1,33])# Convert to cnn input format, (52559, 41*21)
 xtrain = xtrain.astype(int)
 print(xtrain.shape)
-xvalid= xvalid.reshape([-1,1,33])#转成cnn输入格式,(52559, 41*21)
+xvalid= xvalid.reshape([-1,1,33])# Convert to cnn input format, (52559, 41*21)
 xvalid = xvalid.astype(int)
 print(xvalid.shape)
 
@@ -124,7 +124,7 @@ class GELU(nn.Module):
     def forward(self, x):
         return 0.5*x*(1+torch.tanh(np.sqrt(2/np.pi)*(x+0.044715*torch.pow(x,3))))
 
-class Attention_1(nn.Module):#多头自注意力机制
+class Attention_1(nn.Module):# Multi-headed Self-Attention Mechanism
     def __init__(self, hidden_size=128*2,num_attention_heads=8):
         super(Attention_1, self).__init__()
         
@@ -141,8 +141,8 @@ class Attention_1(nn.Module):#多头自注意力机制
         self.value = nn.Linear(hidden_size, self.hidden_size,bias=False).to(device)
         self.gate = nn.Linear(hidden_size, self.hidden_size).to(device)
         
-    def transpose_for_scores(self, x):#将向量分成二个头
-        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)#[:-1]左闭右开不包括-1
+    def transpose_for_scores(self, x):# Divide the vector into two heads
+        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)# [:-1]Left closed and right open not included-1
         x = x.view(*new_x_shape)
         return x.permute(0, 2, 1, 3)
 
@@ -175,7 +175,7 @@ class Attention_1(nn.Module):#多头自注意力机制
         attn_scores = F.softmax(attention_scores  , dim=-1)  # 
         
 
-        # 对于全零向量，-1e32的结果为 1/len, -inf为nan, 额外补0
+        # For an all-zero vector, -1e32 results in 1/len, -inf is nan, and the extra complement is 0
 #         masked_attn_scores = attn_scores.masked_fill((1 - batch_masks).bool(), 0.0)
 
         # sum weighted sources
@@ -202,8 +202,7 @@ max_seq_length=33
 P_array = np.zeros(max_seq_length)
 ann1_index = 16
 for i in range(-16,17,1):
-    P_array[ann1_index+i] = scipy.stats.norm(mu,sigma).pdf(i)#实现正态分布累计密度函数，窗口长度为1
-
+    P_array[ann1_index+i] = scipy.stats.norm(mu,sigma).pdf(i)# Implementing a normally distributed cumulative density function with a window length of 1
 P_gauss1_array = P_array
 P_gauss1_list= list(P_gauss1_array)
 
@@ -216,7 +215,7 @@ print(all_P_gauss1_list.shape)
 class MyNet(nn.Module):
     def __init__(self):
         super().__init__()
-        #与guass概率作用后用的激活函数
+        # The activation function used after the action with guass probability
         self.activation_final = nn.Tanh()#nn.Tanh()
         self.gelu = GELU()
 
@@ -234,8 +233,8 @@ class MyNet(nn.Module):
         
 
 
-        vgg16_bn_=models.vgg16_bn(pretrained=True)#支持我们在自定义架构使用卷积层的部分7-13层
-        resnet18_=models.resnet18(pretrained=True)#使用残差块部分，深度不足可以增加特征图数目，一般取整个残差块layer3
+        vgg16_bn_=models.vgg16_bn(pretrained=True)# Support our use of convolutional layers in custom architectures for some of the layers 7-13
+        resnet18_=models.resnet18(pretrained=True)# Use the residual block part, the depth is not enough to increase the number of feature map, generally take the whole residual block layer3
         
         self.conv1=nn.Sequential(nn.Conv2d(1,64,kernel_size=3,stride=1,padding=1)
                                 ,nn.BatchNorm2d(64,1e-5)
@@ -245,9 +244,9 @@ class MyNet(nn.Module):
         resnet18_.layer3[0].relu=nn.PReLU()
         resnet18_.layer3[1].relu=nn.PReLU()
         
-        self.block2 = vgg16_bn_.features[7:14]#14*14.2个卷积和2个BN层，最后一个最大池化，输入64通道，输出128个通道
-        self.block3 = resnet18_.layer3#7*7,残差网络中说明不要带偏置，看看这个resnet18网络结构是什么
-        self.avgpool = resnet18_.avgpool#将所有特征图尺寸转为1*1
+        self.block2 = vgg16_bn_.features[7:14]# 14*14.2 convolution and 2 BN layers, last max pooling, 64 channels input, 128 channels output
+        self.block3 = resnet18_.layer3# 7*7,It is stated in the residual network not to bring bias, see what this resnet18 network structure is
+        self.avgpool = resnet18_.avgpool# Convert all feature map dimensions to 1*1
         self.cnn = nn.Sequential(
             self.block2,
             self.block3,
@@ -258,7 +257,7 @@ class MyNet(nn.Module):
         
         self.attention_net=Attention_1()
 
-        self.bilstm1 = torch.nn.LSTM(100, 128, 1, bidirectional=True,batch_first=True)#输入维度，隐藏层维度，层数
+        self.bilstm1 = torch.nn.LSTM(100, 128, 1, bidirectional=True,batch_first=True)# Input dimension, hidden layer dimension, number of layers
         self.layer_norm = torch.nn.LayerNorm(64*2).to(device)
         # self.layer_norm = torch.nn.LayerNorm(128).to(device)
 #         self.fc=nn.Sequential(
@@ -330,13 +329,13 @@ class MyNet(nn.Module):
         # hidden = hidden.view(hidden.shape[0],256)
         hidden = self.fc(hidden)
         return hidden
-# 定义损失函数，计算相差多少
-# 调用刚定义的模型，将模型转到GPU（如果可用）
+# Define the loss function and calculate how much the difference is
+# Call the model just defined and transfer the model to the GPU (if available)
 model = MyNet().to(device)
 print(model)
-loss_fn =nn.CrossEntropyLoss()#nn.CrossEntropyLoss()#交叉熵损失函数focal_loss()#alpha=[0.55,0.45],
+loss_fn =nn.CrossEntropyLoss()#nn.CrossEntropyLoss()# Cross-entropy loss function focal_loss()#alpha=[0.55,0.45],
 
-# 定义优化器，用来训练时候优化模型参数
+# Define optimizers to optimize model parameters during training
 
 optimizer = torch.optim.Adam(model.parameters(),lr=2e-4,weight_decay=1e-4)
 #
@@ -354,7 +353,7 @@ if __name__ == '__main__':
 #          transforms.Normalize([0.5], [0.5])])
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     valid_dataloader  = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-    # 定义训练函数，需要
+    # Define the training function that requires
 from sklearn.metrics import accuracy_score,confusion_matrix,classification_report
 
 epoch_list=[]
@@ -366,8 +365,8 @@ test_acc_list=[]
 step=1
 # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=5, eta_min=2e-06)     
    
- #>0.1f表示右对齐，占0个位置,小数为1的浮点数
-# 一共训练10次
+ #>0.1f means right-aligned, takes up 0 positions, decimal 1 floating point number
+# A total of 10 training sessions
 epochs = 20
 # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=5, eta_min=2e-06) 
@@ -419,20 +418,20 @@ tp = obj[1][1]
 sp = tn/(tn+fp)
 sn = tp/(tp+fn)
 mcc= (tp*tn-fp*fn)/(((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn))**0.5)
-print("特异性: ",sp)
+print("sp: ",sp)
 
-# 精度，准确率， 预测正确的占所有样本种的比例
+# Precision, accuracy, percentage of correct predictions for all sample species
 
 accuracy = accuracy_score(yvalid, preds_list)
-print("精度: ",accuracy)
+print("ACC: ",accuracy)
 
-# # 查准率P（准确率），precision(查准率)=TP/(TP+FP)
+# # Check accuracy P (accuracy rate), precision (check accuracy rate) = TP/(TP+FP)
 precision = precision_score(yvalid, preds_list) # 'micro', 'macro', 'weighted'
-print("查准率P: ",precision)
+print("Precision: ",precision)
 
-# # 查全率R（召回率），原本为对的，预测正确的比例；recall(查全率)=TP/(TP+FN)
+# # Check all rate R (recall rate), originally right, the proportion of correct predictions; recall (check all rate) = TP/(TP + FN)
 recall = recall_score(yvalid, preds_list) # 'micro', 'macro', 'weighted'
-print("召回率SN: ",recall)
+print("SN: ",recall)
 
 # F1-Score
 f1 = f1_score(yvalid, preds_list, average='macro')     # 'micro', 'macro', 'weighted'
@@ -447,6 +446,6 @@ fprs, tprs, thresholds = roc_curve(yvalid, decision_score)
 roc_auc = auc(fprs, tprs)
 print("auc",roc_auc)
 
-#Y数据集
+#YDataset
 
 #finetune
